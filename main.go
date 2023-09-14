@@ -1,15 +1,24 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
+	"time"
 
-	"github.com/vargasmesh/go-bt-service/internal/tree"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	bt := tree.New()
-	bt.Insert(10).Insert(5).Insert(15).Insert(3).Insert(7).Insert(13).Insert(17)
-	tree.InOrder(bt.Root, func(n *tree.Node) {
-		fmt.Println(n.Value)
+	router := gin.New()
+	router.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, "Hello World")
 	})
+
+	httpServer := &http.Server{
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	httpServer.ListenAndServe()
 }
