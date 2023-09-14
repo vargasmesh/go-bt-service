@@ -47,3 +47,12 @@ func InOrder(n *Node, f func(*Node)) {
 	f(n)
 	InOrder(n.Right, f)
 }
+
+func PreOrder(n *Node, f func(*Node)) {
+	if n == nil {
+		return
+	}
+	f(n)
+	PreOrder(n.Left, f)
+	PreOrder(n.Right, f)
+}

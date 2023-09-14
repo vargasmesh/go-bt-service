@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,8 +16,20 @@ import (
 
 func main() {
 	router := gin.New()
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "Hello World")
+	treeServer := server.NewTreeServer()
+
+	router.GET("/tree", func(c *gin.Context) {
+		c.JSON(http.StatusOK, treeServer.GetPreOrderTree())
+	})
+
+	router.POST("/tree", func(c *gin.Context) {
+		var value int
+		if err := c.ShouldBindJSON(&value); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		treeServer.Insert(value)
+		c.JSON(http.StatusOK, fmt.Sprintf("Inserted %d", value))
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -27,8 +40,6 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-
-	treeServer := server.NewTreeServer()
 
 	go treeServer.Run(ctx)
 	go func() {
