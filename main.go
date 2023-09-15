@@ -37,8 +37,8 @@ func main() {
 	httpServer := &http.Server{
 		Addr:         ":8080",
 		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: 60 * time.Second,
 	}
 
 	go treeServer.Run(ctx)

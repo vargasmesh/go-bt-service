@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/vargasmesh/go-bt-service/internal/tree"
@@ -14,13 +15,14 @@ type TreeServer struct {
 	insertChan  chan int
 	maxTreeSize int
 	currentSize int
+	mu          sync.RWMutex
 }
 
 func NewTreeServer() *TreeServer {
 	t := &TreeServer{
 		Tree:        tree.New(),
 		insertChan:  make(chan int),
-		maxTreeSize: 5,
+		maxTreeSize: 100,
 		currentSize: 0,
 	}
 
@@ -45,6 +47,8 @@ func (s *TreeServer) Run(ctx context.Context) {
 }
 
 func (s *TreeServer) GetPreOrderTree() []int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	var flatTree []int
 	tree.PreOrder(s.Tree.Root, func(n *tree.Node) {
 		flatTree = append(flatTree, n.Value)
@@ -53,6 +57,8 @@ func (s *TreeServer) GetPreOrderTree() []int {
 }
 
 func (s *TreeServer) handleInsert(value int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.Tree.Insert(value)
 	s.currentSize++
 	if s.currentSize == s.maxTreeSize {
