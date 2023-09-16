@@ -9,13 +9,17 @@ import (
 )
 
 func TestTree(t *testing.T) {
-	binaryTree := tree.New()
+	binaryTree := tree.New[int](
+		func(t1, t2 int) bool {
+			return t1 < t2
+		},
+	)
 	for i := 0; i < 500; i++ {
 		binaryTree.Insert(rand.Intn(1000))
 	}
 
 	result := []int{}
-	tree.InOrder(binaryTree.Root, func(n *tree.Node) {
+	tree.InOrder(binaryTree.Root, func(n *tree.Node[int]) {
 		result = append(result, n.Value)
 	})
 

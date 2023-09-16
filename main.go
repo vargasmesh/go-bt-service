@@ -16,7 +16,9 @@ import (
 
 func main() {
 	router := gin.New()
-	treeServer := server.NewTreeServer()
+	treeServer := server.NewTreeServer(func(t1, t2 int) bool {
+		return t1 < t2
+	})
 
 	router.GET("/tree", func(c *gin.Context) {
 		c.JSON(http.StatusOK, treeServer.GetPreOrderTree())

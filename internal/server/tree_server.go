@@ -10,18 +10,19 @@ import (
 	"github.com/vargasmesh/go-bt-service/internal/tree"
 )
 
-type TreeServer struct {
-	Tree        *tree.Tree
-	insertChan  chan int
+type TreeServer[T any] struct {
+	Tree        *tree.Tree[T]
+	less        tree.Less[T]
+	insertChan  chan T
 	maxTreeSize int
 	currentSize int
 	mu          sync.RWMutex
 }
 
-func NewTreeServer() *TreeServer {
-	t := &TreeServer{
-		Tree:        tree.New(),
-		insertChan:  make(chan int),
+func NewTreeServer[T any](less tree.Less[T]) *TreeServer[T] {
+	t := &TreeServer[T]{
+		Tree:        tree.New(less),
+		insertChan:  make(chan T),
 		maxTreeSize: 100,
 		currentSize: 0,
 	}
@@ -31,11 +32,11 @@ func NewTreeServer() *TreeServer {
 	return t
 }
 
-func (s *TreeServer) Insert(value int) {
+func (s *TreeServer[T]) Insert(value T) {
 	s.insertChan <- value
 }
 
-func (s *TreeServer) Run(ctx context.Context) {
+func (s *TreeServer[T]) Run(ctx context.Context) {
 	for {
 		select {
 		case value := <-s.insertChan:
@@ -46,17 +47,17 @@ func (s *TreeServer) Run(ctx context.Context) {
 	}
 }
 
-func (s *TreeServer) GetPreOrderTree() []int {
+func (s *TreeServer[T]) GetPreOrderTree() []T {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	var flatTree []int
-	tree.PreOrder(s.Tree.Root, func(n *tree.Node) {
+	var flatTree []T
+	tree.PreOrder(s.Tree.Root, func(n *tree.Node[T]) {
 		flatTree = append(flatTree, n.Value)
 	})
 	return flatTree
 }
 
-func (s *TreeServer) handleInsert(value int) {
+func (s *TreeServer[T]) handleInsert(value T) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.Tree.Insert(value)
@@ -68,10 +69,10 @@ func (s *TreeServer) handleInsert(value int) {
 		}
 		defer f.Close()
 
-		tree.InOrder(s.Tree.Root, func(n *tree.Node) {
+		tree.InOrder(s.Tree.Root, func(n *tree.Node[T]) {
 			f.WriteString(fmt.Sprintf("%d\n", n.Value))
 		})
-		s.Tree = tree.New()
+		s.Tree = tree.New(s.less)
 		s.currentSize = 0
 	}
 }
